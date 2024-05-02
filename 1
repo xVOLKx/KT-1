@@ -1,0 +1,50 @@
+Game-Server: ```javascript const net = require('net');
+
+const server = net.createServer((socket) => { console.log('Новое подключение');
+
+socket.on('data', (data) => { const message = JSON.parse(data);
+
+if (message.range) {
+  console.log(`Игровой диапазон: ${message.range}`);
+  const range = message.range.split('-');
+  const min = parseInt(range[0]);
+  const max = parseInt(range[1]);
+  
+  const answer = Math.floor(Math.random() * (max - min + 1)) + min;
+  console.log(`Загаданное число: ${answer}`);
+  
+  socket.write(JSON.stringify({ answer }));
+} else if (message.hint) {
+  console.log(`Подсказка от клиента: ${message.hint}`);
+}
+  
+});
+socket.on('end', () => { console.log('Подключение закрыто'); }); });
+
+server.listen(3000, () => { console.log('Готов к игре...'); }); ```
+
+Game-Client: ```javascript const net = require('net');
+
+const client = new net.Socket();
+
+const min = process.argv[2] ? parseInt(process.argv[2]) : 1; const max = process.argv[3] ? parseInt(process.argv[3]) : 100;
+
+client.connect(3000, 'localhost', () => { console.log(Подключено к серверу);
+
+const range = ${min}-${max}; console.log(Диапазон чисел: ${range});
+
+client.write(JSON.stringify({ range })); });
+
+client.on('data', (data) => { const message = JSON.parse(data);
+
+if (message.answer) { console.log(Ответ сервера: ${message.answer}); const guess = Math.floor((min + max) / 2); console.log(Попытка угадать: ${guess}); client.write(JSON.stringify({ hint: guess < message.answer ? 'more' : 'less' }));
+
+if (guess === message.answer) {
+  console.log('Угадал!');
+  client.destroy();
+}
+  
+}
+});
+
+client.on('close', () => { console.log('Соединение закрыто'); }); ``
